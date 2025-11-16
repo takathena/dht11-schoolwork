@@ -25,7 +25,7 @@ Bagaimana cara menjalankan project ini? Ikuti langkah-langkah dibawah ini.
 * Voila!! dashboard sudah muncul
 ## Screenshots
 
-![App Screenshot](assets/Screenshot%202025-11-13%20at%2011-05-53%20Dashboard%20DHT11%20Telkomsel.png)
+![App Screenshot](assets/screenshot/FireShot%20Capture%20001%20-%20Dashboard%20ESP32%20-%20192.168.43.15.png)
 
 
 ## Authors
