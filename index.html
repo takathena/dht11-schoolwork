@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard DHT11 Telkomsel</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.cdnfonts.com/css/rubik-2" rel="stylesheet">
+
+<style>
+body {
+ margin: 0;
+ font-family: 'Rubik', sans-serif;
+ background: url('https://wallpapercave.com/wp/wp8372180.png') repeat center center fixed;
+ background-size: cover;
+ color: #333;
+}
+.container {
+ display: flex;
+ flex-direction: row;
+ justify-content: center;
+ align-items: flex-start;
+ padding-top: 1.1em;
+ gap: 30px;
+ width: 100%;
+ box-sizing: border-box;
+}
+.left-panel {
+ display: flex;
+ flex-direction: column;
+ gap: 20px;
+ width: 25%;
+ max-width: 320px;
+ min-width: 220px;
+}
+.right-panel {
+ display: flex;
+ flex-direction: column;
+ gap: 30px;
+ flex: 1;
+ max-width: 900px;
+}
+.widget {
+ background: rgba(255, 255, 255, 0.95);
+ border-radius: 15px;
+ padding: 28.1px 20px;
+ text-align: center;
+ box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+ transition: transform 0.2s;
+}
+.widget:hover {
+ transform: scale(1.03);
+}
+.widget h2 {
+ font-size: 1em;
+ color: #213975;
+ margin-bottom: 10px;
+}
+.widget p {
+ font-size: 1.8em;
+ margin: 0;
+}
+.active {
+ color: #6BCD90;
+ font-weight: bolder;
+}
+.chart-box {
+ background: rgba(255, 255, 255, 0.95);
+ border-radius: 15px;
+ padding: 20px;
+ box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+canvas {
+ width: 100% !important;
+ height: 350px !important;
+}
+@media(max-width: 900px) {
+ .container {
+   flex-direction: column;
+   align-items: center;
+ }
+ .left-panel, .right-panel {
+   width: 90%;
+   max-width: none;
+ }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+ <!-- Panel Kiri -->
+ <div class="left-panel">
+   <div class="widget"><h2>Waktu & Tempat</h2><p id="location">Pohon Trembesi</p></div>
+   <div class="widget"><h2>Suhu (°C)</h2><p id="temp">--</p></div>
+   <div class="widget"><h2>Humidity (%)</h2><p id="hum">--</p></div>
+   <div class="widget"><h2>Avg Suhu</h2><p id="avgTemp">--</p></div>
+   <div class="widget"><h2>Status ESP</h2><p id="status" class="active">Aktif</p></div>
+   <div class="widget"><h2>Waktu & Tempat</h2><p id="location">Lab Merah<br><span id="time">--:--:--</span></p></div>
+ </div>
+
+ <!-- Panel Kanan -->
+ <div class="right-panel">
+   <div class="chart-box">
+     <h3 style="text-align:center;color: #213975;">Diagram Batang</h3>
+     <canvas id="barChart"></canvas>
+   </div>
+   <div class="chart-box">
+     <h3 style="text-align:center;color: #213975;">Diagram Garis</h3>
+     <canvas id="lineChart"></canvas>
+   </div>
+ </div>
+</div>
+
+<script>
+let tempData = [], humData = [], labels = [];
+const barCtx = document.getElementById('barChart').getContext('2d');
+const lineCtx = document.getElementById('lineChart').getContext('2d');
+
+const barChart = new Chart(barCtx, {
+ type: 'bar',
+ data: {
+   labels: labels,
+   datasets: [
+     { label: 'Suhu (°C)', data: tempData, backgroundColor: '#409DA2' },
+     { label: 'Kelembapan (%)', data: humData, backgroundColor: '#A9C9C7' }
+   ]
+ },
+ options: { responsive: true, maintainAspectRatio: false }
+});
+
+const lineChart = new Chart(lineCtx, {
+ type: 'line',
+ data: {
+   labels: labels,
+   datasets: [
+     { label: 'Suhu (°C)', data: tempData, borderColor: '#409DA2', fill: false, tension: 0.3 },
+     { label: 'Kelembapan (%)', data: humData, borderColor: '#A9C9C7', fill: false, tension: 0.3 }
+   ]
+ },
+ options: { responsive: true, maintainAspectRatio: false }
+});
+
+setInterval(() => {
+ const now = new Date();
+ document.getElementById('time').textContent = now.toLocaleTimeString();
+}, 1000);
+
+setInterval(async () => {
+ try {
+   const r = await fetch('/data');
+   const d = await r.json();
+   document.getElementById('temp').textContent = d.temp;
+   document.getElementById('hum').textContent = d.hum;
+   document.getElementById('avgTemp').textContent = d.avg;
+   if (tempData.length > 10) {
+     tempData.shift();
+     humData.shift();
+     labels.shift();
+   }
+   tempData.push(d.temp);
+   humData.push(d.hum);
+   labels.push(new Date().toLocaleTimeString());
+   barChart.update();
+   lineChart.update();
+ } catch (e) {
+   console.log(e);
+ }
+}, 2000);
+</script>
+</body>
+</html>
